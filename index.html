@@ -410,7 +410,7 @@ function renderCal() {
     var evH='';
     for(var j=0;j<evs.length;j++){
       var ev=evs[j],eidx=events.indexOf(ev);
-      evH+='<div class="cal-ev '+(ev.carrito==='CARRITO 1'?'cal-ev-c1':ev.carrito==='CARRITO 2'?'cal-ev-c2':'cal-ev-c12')+'"' onclick="showModal('+eidx+')">'+ev.nombre+'</div>';
+      evH+='<div class="cal-ev '+(ev.carrito==='CARRITO 1'?'cal-ev-c1':ev.carrito==='CARRITO 2'?'cal-ev-c2':'cal-ev-c12')+'" onclick="showModal('+eidx+')">'+ev.nombre+'</div>';
     }
     html+='<div class="cal-cell'+(other?' other':'')+(isToday?' today-cell':'')+'"><div class="day-n">'+day+'</div>'+evH+'</div>';
   }
