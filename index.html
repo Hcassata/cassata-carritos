@@ -212,7 +212,7 @@ var STORE = 'cassata_v7';
 var SHEET_URL_KEY = 'cassata_sheet_url';
 var events = [], calY = new Date().getFullYear(), calM = new Date().getMonth();
 var filters = {carrito:'all', pago:'all', presupuesto:'all'}, editIdx = -1;
-var sheetUrl = localStorage.getItem(SHEET_URL_KEY) || 'https://script.google.com/macros/s/AKfycbzpXLaH5Siobx-KsvUEo_yhNflUlomQOEgfhlggxcFaXeQYrnWVrtoI67YgZoZZuqA3/exec';
+var sheetUrl = localStorage.getItem(SHEET_URL_KEY) || 'https://script.google.com/macros/s/AKfycbzu_KqF17Pj4PNVg_ZbVMItI5yqXthdT8jmbMJBG34zkdo3z3VGSM47oPjE4uLQnZF5/exec';
 var currentPDFData = null, currentPDFName = '';
 var isSyncing = false;
 
@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Sync buttons
   document.getElementById('btnConfig').addEventListener('click', function(){
-    document.getElementById('sheetUrl').value = sheetUrl || 'https://script.google.com/macros/s/AKfycbzpXLaH5Siobx-KsvUEo_yhNflUlomQOEgfhlggxcFaXeQYrnWVrtoI67YgZoZZuqA3/exec';
+    document.getElementById('sheetUrl').value = sheetUrl || 'https://script.google.com/macros/s/AKfycbzu_KqF17Pj4PNVg_ZbVMItI5yqXthdT8jmbMJBG34zkdo3z3VGSM47oPjE4uLQnZF5/exec';
     document.getElementById('testResult').style.display='none';
     document.getElementById('configOverlay').classList.add('open');
   });
