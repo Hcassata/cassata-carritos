@@ -267,7 +267,9 @@ function syncFromSheet() {
       isSyncing = false;
       if (res.ok) {
         events = res.events.map(function(ev) {
-          ev.fecha = normalizeFecha(ev.fecha);
+          ev.fecha   = normalizeFecha(ev.fecha);
+          ev.hinicio = normalizeHora(ev.hinicio);
+          ev.hfin    = normalizeHora(ev.hfin);
           return ev;
         });
         saveLocal();
@@ -349,15 +351,27 @@ function renderStats() {
 
 function normalizeFecha(d) {
   if (!d) return '';
-  // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) return String(d);
-  // It's a Date object or date string from Sheets
   var dt = new Date(d);
   if (isNaN(dt.getTime())) return String(d);
   var y = dt.getFullYear();
   var m = String(dt.getMonth()+1).padStart(2,'0');
   var day = String(dt.getDate()).padStart(2,'0');
   return y+'-'+m+'-'+day;
+}
+function normalizeHora(h) {
+  if (!h) return '';
+  var s = String(h);
+  // Already HH:MM
+  if (/^\d{2}:\d{2}$/.test(s)) return s;
+  // Sheets returns time as ISO date string like "1899-12-30T16:14:44.000Z"
+  if (s.indexOf('T') > -1) {
+    var dt = new Date(s);
+    var hh = String(dt.getUTCHours()).padStart(2,'0');
+    var mm = String(dt.getUTCMinutes()).padStart(2,'0');
+    return hh + ':' + mm;
+  }
+  return s;
 }
 function fd(d){
   var s = normalizeFecha(d);
