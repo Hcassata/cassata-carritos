@@ -132,6 +132,8 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .close-wrap{position:relative;overflow:visible}
 .btn-close{padding:8px 12px;font-size:12px;font-weight:800;border:1.5px solid var(--gray2);border-radius:var(--r);background:none;cursor:pointer;color:var(--txt2);font-family:'Nunito',sans-serif}
 .btn-close:hover{border-color:var(--redtxt);color:var(--redtxt);background:var(--redbg)}
+.btn-close-hdr{padding:4px 8px;font-size:11px;font-weight:800;border:1.5px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(255,255,255,.15);cursor:pointer;color:white;font-family:'Nunito',sans-serif;white-space:nowrap}
+.btn-close-hdr:hover{background:rgba(255,255,255,.3)}
 .close-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--white);border:1.5px solid var(--gray2);border-radius:var(--r2);box-shadow:var(--sh2);min-width:220px;z-index:200}
 .close-menu.open{display:block}
 .close-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--txt);border-bottom:1px solid var(--gray);transition:background .12s;pointer-events:all;user-select:none}
@@ -540,7 +542,13 @@ function cardHTML(ev, isClosed){
     '<div class="ev-head" onclick="toggleCard('+idx+')" style="'+headBg+'">'+
       '<div class="ev-left"><div class="cpip '+pipC(ev.carrito)+'">'+pipL(ev.carrito)+'</div>'+
       '<div><div class="ev-name">'+ev.nombre+closedTag+'</div><div class="ev-meta">'+fd(ev.fecha)+' · '+ev.hinicio+'–'+ev.hfin+' · '+ev.personal+' pers.</div></div></div>'+
-      '<div class="ev-badges"><span class="badge '+presC(ev.presupuesto)+'">'+presL(ev.presupuesto)+'</span><span class="badge '+pagoC(ev.pago)+'">'+pagoL(ev.pago)+'</span><span class="chev" id="chev-'+idx+'">▼</span></div>'+
+      '<div class="ev-badges">'+
+      (isClosed ? '' : '<div class="close-wrap" onclick="event.stopPropagation()"><button class="btn-close-hdr" onclick="toggleCloseMenu(this,event)">🔒▾</button><div class="close-menu">'+
+        '<div class="close-item" onclick="closeEv('+idx+',\'finalizado\',event)"><div class="ci ci-ok">✅</div><div>Finalizado<br><small>Evento realizado con éxito</small></div></div>'+
+        '<div class="close-item" onclick="closeEv('+idx+',\'no-presupuesto\',event)"><div class="ci ci-no">❌</div><div>Cerrado<br><small>No acepta el presupuesto</small></div></div>'+
+        '<div class="close-item" onclick="closeEv('+idx+',\'sin-contestacion\',event)"><div class="ci ci-nc">🔇</div><div>Cerrado<br><small>Sin contestación</small></div></div>'+
+        '</div></div>')+
+      '<span class="badge '+presC(ev.presupuesto)+'">'+presL(ev.presupuesto)+'</span><span class="badge '+pagoC(ev.pago)+'">'+pagoL(ev.pago)+'</span><span class="chev" id="chev-'+idx+'">▼</span></div>'+
     '</div>'+
     '<div class="ev-body" id="body-'+idx+'">'+
       '<div class="di"><div class="dl">Carrito</div><div class="dv"><span class="badge '+badgeC(ev.carrito)+'">'+ev.carrito+'</span></div></div>'+
