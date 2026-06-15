@@ -430,7 +430,6 @@ function renderList() {
   if(co) co.textContent = totalOpen;
   if(cc) cc.textContent = totalClosed;
   // Render abiertos
-  if (!fl.length) { document.getElementById('eventList').innerHTML='<div class="empty">🍦 Sin eventos abiertos con estos filtros</div>'; }
   var html='';
   for (var i=0;i<fl.length;i++) {
     var ev=fl[i], idx=events.indexOf(ev);
@@ -453,7 +452,34 @@ function renderList() {
     html+='<div class="ev-actions"><button class="btn-edit" onclick="editEvent('+idx+')">✏️ Editar</button>'+(ev.estado?'<button class="reopen-btn" onclick="reopenEvent('+idx+')">↩️ Reabrir</button>':'<div style="position:relative"><button class="close-btn" onclick="toggleCloseMenu(this)">🔒 Cerrar ▾</button><div class="close-menu"><div class="close-menu-item" onclick="closeEvent('+idx+',\'finalizado\')"><div class="ci ci-done">✅</div><div><div>Finalizado</div><small style="color:var(--txt2);font-weight:600">Evento realizado con éxito</small></div></div><div class="close-menu-item" onclick="closeEvent('+idx+',\'no-presupuesto\')"><div class="ci ci-nopres">❌</div><div><div>Cerrado</div><small style="color:var(--txt2);font-weight:600">No acepta el presupuesto</small></div></div><div class="close-menu-item" onclick="closeEvent('+idx+',\'sin-contestacion\')"><div class="ci ci-noans">🔇</div><div><div>Cerrado</div><small style="color:var(--txt2);font-weight:600">Sin contestación</small></div></div></div></div>')+'<button class="btn-del" onclick="delEvent('+idx+')">🗑 Eliminar</button></div>';
     html+='</div></div>';
   }
-  document.getElementById('eventList').innerHTML=html;
+  document.getElementById('eventList').innerHTML = html || '<div class="empty">🍦 Sin eventos abiertos con estos filtros</div>';
+
+  // Render cerrados
+  var htmlC = '';
+  for (var ic=0; ic<fc.length; ic++) {
+    var evc=fc[ic], idxc=events.indexOf(evc);
+    htmlC+='<div class="ev-card ev-closed" id="card-'+idxc+'">';
+    htmlC+='<div class="ev-head" onclick="toggleCard('+idxc+')" style="background:linear-gradient(135deg,#5a6570,#7a8590)">';
+    htmlC+='<div class="ev-left"><div class="c-pip '+(evc.carrito==='CARRITO 1'?'pip1':evc.carrito==='CARRITO 2'?'pip2':'pip12')+'">'+(evc.carrito==='CARRITO 1'?'C1':evc.carrito==='CARRITO 2'?'C2':'C1+2')+'</div>';
+    htmlC+='<div><div class="ev-name">'+evc.nombre+'<span class="closed-banner">'+(evc.estado==='finalizado'?'✅ Finalizado':evc.estado==='no-presupuesto'?'❌ No acepta presup.':'🔇 Sin contestación')+'</span></div>';
+    htmlC+='<div class="ev-meta">'+fd(evc.fecha)+' · '+evc.hinicio+'–'+evc.hfin+'</div></div></div>';
+    htmlC+='<div class="ev-badges"><span class="badge '+presC(evc.presupuesto)+'">'+presL(evc.presupuesto)+'</span><span class="badge '+pagoC(evc.pago)+'">'+pagoL(evc.pago)+'</span><span class="chev" id="chev-'+idxc+'">▼</span></div></div>';
+    htmlC+='<div class="ev-body" id="body-'+idxc+'">';
+    htmlC+='<div class="di"><div class="dl">Carrito</div><div class="dv"><span class="badge '+(evc.carrito==='CARRITO 1'?'b-c1':evc.carrito==='CARRITO 2'?'b-c2':'b-c12')+'">'+evc.carrito+'</span></div></div>';
+    htmlC+='<div class="di"><div class="dl">Horario</div><div class="dv">'+fdL(evc.fecha)+'<br>'+evc.hinicio+' – '+evc.hfin+'</div></div>';
+    htmlC+='<div class="di di-full"><div class="dl">📍 Dirección</div><div class="dv">'+evc.lugar+'</div></div>';
+    htmlC+='<div class="di"><div class="dl">👤 Contacto</div><div class="dv">'+evc.contacto+'</div></div>';
+    htmlC+='<div class="di"><div class="dl">📞 Teléfono</div><div class="dv"><a href="tel:'+evc.telefono+'">'+evc.telefono+'</a></div></div>';
+    htmlC+='<div class="di di-full"><div class="dl">🍧 Han pedido</div><div class="dv">'+evc.pedido+'</div></div>';
+    htmlC+='<div class="di"><div class="dl">👥 Personal</div><div class="dv">'+(evc.personal===0||evc.personal==='0'?'<em style="color:var(--gray3)">Sin personal</em>':evc.personal+' pers. × '+evc.horas+'h = <strong>'+(evc.personal*evc.horas)+'h</strong>')+'</div></div>';
+    htmlC+='<div class="di"><div class="dl">📋 Presupuesto</div><div class="dv"><span class="badge '+presC(evc.presupuesto)+'">'+presL(evc.presupuesto)+'</span></div></div>';
+    htmlC+='<div class="di di-full"><div class="dl">💳 Pago</div><div class="dv"><span class="badge '+pagoC(evc.pago)+'">'+pagoL(evc.pago)+'</span>'+(evc.notasPago?'<div class="notas-pago-box">'+evc.notasPago+'</div>':'')+'</div></div>';
+    htmlC+=(evc.obs?'<div class="di di-full"><div class="dl">💬 Observaciones</div><div class="dv obs-box">'+evc.obs+'</div></div>':'');
+    htmlC+='<div class="ev-actions"><button class="reopen-btn" onclick="reopenEvent('+idxc+')">↩️ Reabrir evento</button><button class="btn-del" onclick="delEvent('+idxc+')">🗑 Eliminar</button></div>';
+    htmlC+='</div></div>';
+  }
+  var elC = document.getElementById('eventListCerrados');
+  if(elC) elC.innerHTML = htmlC || '<div class="empty">No hay eventos cerrados</div>';
 }
 
 function toggleCard(idx) {
