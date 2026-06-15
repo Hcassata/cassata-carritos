@@ -124,6 +124,8 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .btn-edit{flex:1;text-align:center;padding:8px;font-size:12px;font-weight:800;border:1.5px solid var(--az);border-radius:var(--r);background:none;cursor:pointer;color:var(--az);transition:all .15s;font-family:'Nunito',sans-serif}
 .btn-edit:hover{background:var(--az);color:white}
 .btn-del{padding:8px 12px;font-size:12px;border:none;border-radius:var(--r);background:none;cursor:pointer;color:var(--gray3);font-weight:800;font-family:'Nunito',sans-serif}
+.btn-print{padding:8px 12px;font-size:12px;font-weight:800;border:1.5px solid var(--az3);border-radius:var(--r);background:none;cursor:pointer;color:var(--az3);font-family:'Nunito',sans-serif}
+.btn-print:hover{background:var(--az3);color:white}
 .btn-del:hover{color:var(--redtxt);background:var(--redbg)}
 .btn-reopen{padding:8px 12px;font-size:12px;font-weight:800;border:1.5px solid var(--az);border-radius:var(--r);background:none;cursor:pointer;color:var(--az);font-family:'Nunito',sans-serif}
 .btn-reopen:hover{background:var(--az);color:white}
@@ -212,6 +214,17 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .btn-save:hover{background:var(--az2)}
 
 /* FOOTER */
+.fin-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.fin-card{background:var(--white);border-radius:var(--r2);padding:16px 18px;box-shadow:var(--sh);border-left:4px solid var(--az)}
+.fin-total{border-left-color:var(--az)}
+.fin-cobrado{border-left-color:var(--ok)}
+.fin-pend{border-left-color:var(--redtxt)}
+.fin-label{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;font-weight:900;margin-bottom:6px}
+.fin-num{font-size:26px;font-weight:800;color:var(--az);line-height:1;font-family:'Playfair Display',serif;margin-bottom:6px}
+.fin-bar{height:4px;background:var(--gray2);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.fin-bar-fill{height:100%;background:var(--ok);border-radius:2px;transition:width .5s}
+.fin-sub{font-size:11px;color:var(--gray3);font-weight:600}
+@media(max-width:640px){.fin-row{grid-template-columns:1fr}}
 .footer{text-align:center;margin-top:2rem;padding:1.5rem;border-top:1px solid var(--gray2);color:var(--gray3);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .footer-ico{width:30px;height:30px;border-radius:50%;background:var(--az);padding:3px;display:flex;align-items:center;justify-content:center}
 .footer-ico img{width:100%;height:100%;object-fit:contain}
@@ -371,6 +384,7 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
             <option value="aprobado">✓ Aprobado</option>
           </select>
         </div>
+        <div class="fg"><label>💶 Importe del evento (€)</label><input type="number" id="f-importe" min="0" step="0.01" placeholder="0.00"></div>
         <div class="fg"><label>PDF presupuesto</label>
           <div class="file-drop" id="fileDrop" onclick="document.getElementById('f-pdf').click()">
             <span id="fileLabel">📎 Haz clic para adjuntar PDF</span>
@@ -500,6 +514,11 @@ function renderStats(){
   var pp=events.filter(function(e){return e.presupuesto==='pendiente'&&!e.estado;}).length;
   var c1=events.filter(function(e){return e.carrito==='CARRITO 1';}).length;
   var pct=t?Math.round(pag/t*100):0;
+  // Financial stats
+  var totalFacturado = events.filter(function(e){return !e.estado;}).reduce(function(s,e){return s+(parseFloat(e.importe)||0);},0);
+  var totalCobrado   = events.filter(function(e){return e.pago==='pagado';}).reduce(function(s,e){return s+(parseFloat(e.importe)||0);},0);
+  var totalPendiente = events.filter(function(e){return e.pago!=='pagado'&&!e.estado;}).reduce(function(s,e){return s+(parseFloat(e.importe)||0);},0);
+  function eur(n){return n.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:0})+'€';}
   // Count urgent events (open, <=7 days, has issues)
   var today0 = new Date(); today0.setHours(0,0,0,0);
   var urgent = events.filter(function(e){
@@ -516,6 +535,20 @@ function renderStats(){
     '<div class="stat" style="border-top-color:'+(pend>0?'var(--redtxt)':'var(--gray2)')+'"><div class="stat-icon">⏳</div><div class="stat-lbl">Pago pendiente</div><div class="stat-num" style="color:'+(pend>0?'var(--redtxt)':'var(--txt)')+'">'+pend+'</div><div class="stat-sub">'+senal+' con señal</div></div>'+
     '<div class="stat" style="border-top-color:'+(pp>0?'var(--gold2)':'var(--gray2)')+'"><div class="stat-icon">📋</div><div class="stat-lbl">Presup. por enviar</div><div class="stat-num" style="color:'+(pp>0?'var(--redtxt)':'var(--txt)')+'">'+pp+'</div><div class="stat-sub">requieren atención</div></div>'+
     (urgent>0 ? '<div class="stat" style="border-top-color:#ff4422;grid-column:1/-1"><div class="stat-icon">🚨</div><div class="stat-lbl">Urgente — próximos 7 días</div><div class="stat-num" style="color:#ff4422">'+urgent+'</div><div class="stat-sub">evento'+(urgent>1?'s con':'con')+' presupuesto o pago pendiente</div></div>' : '');
+
+  // Financial summary row
+  if (totalFacturado > 0) {
+    var pctCobrado = totalFacturado ? Math.round(totalCobrado/totalFacturado*100) : 0;
+    document.getElementById('statsRow').insertAdjacentHTML('afterend',
+      '<div class="fin-row">'+
+        '<div class="fin-card fin-total"><div class="fin-label">💶 Total facturado</div><div class="fin-num">'+eur(totalFacturado)+'</div></div>'+
+        '<div class="fin-card fin-cobrado"><div class="fin-label">✅ Cobrado</div><div class="fin-num" style="color:var(--ok)">'+eur(totalCobrado)+'</div>'+
+          '<div class="fin-bar"><div class="fin-bar-fill" style="width:'+pctCobrado+'%"></div></div>'+
+          '<div class="fin-sub">'+pctCobrado+'% del total</div></div>'+
+        '<div class="fin-card fin-pend"><div class="fin-label">⏳ Por cobrar</div><div class="fin-num" style="color:var(--redtxt)">'+eur(totalPendiente)+'</div></div>'+
+      '</div>'
+    );
+  }
 }
 
 function getFiltered(){
@@ -570,8 +603,11 @@ function cardHTML(ev, isClosed){
   var closedTag = isClosed ? '<span class="closed-tag">'+(ev.estado==='finalizado'?'✅ Finalizado':ev.estado==='no-presupuesto'?'❌ No acepta':' 🔇 Sin contestación')+'</span>' : '';
   var personalTxt = (ev.personal===0||ev.personal==='0'||!ev.personal) ? '<em style="color:var(--gray3)">Sin personal</em>' : ev.personal+' pers. × '+ev.horas+'h = <strong>'+(ev.personal*ev.horas)+'h</strong>';
   var actionsHTML = isClosed
-    ? '<button class="btn-reopen" onclick="reopenEv('+idx+')">↩️ Reabrir</button><button class="btn-del" onclick="delEv('+idx+')">🗑 Eliminar</button>'
+    ? '<button class="btn-reopen" onclick="reopenEv('+idx+')">↩️ Reabrir</button>'+
+      '<button class="btn-print" onclick="printEv('+idx+');event.stopPropagation()">🖨️ Ficha</button>'+
+      '<button class="btn-del" onclick="delEv('+idx+')">🗑 Eliminar</button>'
     : '<button class="btn-edit" onclick="editEv('+idx+')">✏️ Editar</button>'+
+      '<button class="btn-print" onclick="printEv('+idx+');event.stopPropagation()">🖨️ Ficha</button>'+
       '<button class="btn-del" onclick="delEv('+idx+')">🗑 Eliminar</button>';
     return '<div class="ev-card'+(isClosed?' closed':'')+'" id="card-'+idx+'">'+
     '<div class="ev-head" onclick="toggleCard('+idx+')" style="'+headBg+'">'+
@@ -594,7 +630,8 @@ function cardHTML(ev, isClosed){
       '<div class="di di-full"><div class="dl">🍧 Han pedido</div><div class="dv">'+ev.pedido+'</div></div>'+
       '<div class="di"><div class="dl">👥 Personal</div><div class="dv">'+personalTxt+'</div></div>'+
       '<div class="di"><div class="dl">📋 Presupuesto</div><div class="dv"><span class="badge '+presC(ev.presupuesto)+'">'+presL(ev.presupuesto)+'</span>'+(ev.pdfName?'<br><a class="pdf-link" href="'+(ev.pdfData||'#')+'" download="'+ev.pdfName+'" onclick="event.stopPropagation()">📄 '+ev.pdfName+'</a>':'')+'</div></div>'+
-      '<div class="di di-full"><div class="dl">💳 Pago</div><div class="dv"><span class="badge '+pagoC(ev.pago)+'">'+pagoL(ev.pago)+'</span>'+(ev.notasPago?'<div class="notas-box">'+ev.notasPago+'</div>':'')+'</div></div>'+
+      '<div class="di"><div class="dl">💳 Pago</div><div class="dv"><span class="badge '+pagoC(ev.pago)+'">'+pagoL(ev.pago)+'</span>'+(ev.notasPago?'<div class="notas-box">'+ev.notasPago+'</div>':'')+'</div></div>'+
+      (ev.importe?'<div class="di"><div class="dl">💶 Importe</div><div class="dv"><strong style="font-size:16px;color:var(--az)">'+ev.importe.toLocaleString(\'es-ES\',{minimumFractionDigits:2})+' €</strong></div></div>':'')+
       (ev.obs?'<div class="di di-full"><div class="dl">💬 Observaciones</div><div class="dv obs-box">'+ev.obs+'</div></div>':'')+
       '<div class="ev-actions">'+actionsHTML+'</div>'+
     '</div>'+
@@ -690,6 +727,7 @@ function editEv(idx){
   document.getElementById('f-tel').value=ev.telefono||'';
   document.getElementById('f-pedido').value=ev.pedido||'';
   document.getElementById('f-presu').value=ev.presupuesto||'pendiente';
+  document.getElementById('f-importe').value=ev.importe||0;
   document.getElementById('f-pago').value=ev.pago||'pendiente';
   document.getElementById('f-notas').value=ev.notasPago||'';
   document.getElementById('f-personal').value=ev.personal||0;
@@ -710,6 +748,7 @@ function clearForm(){
   document.getElementById('f-presu').value='pendiente';
   document.getElementById('f-pago').value='pendiente';
   document.getElementById('f-personal').value='2';
+  document.getElementById('f-importe').value='';
   document.getElementById('f-horas').value='4';
   pdfData=null; pdfName='';
   document.getElementById('fileLabel').textContent='📎 Haz clic para adjuntar PDF';
@@ -729,6 +768,7 @@ function saveForm(){
     telefono: document.getElementById('f-tel').value.trim(),
     pedido: document.getElementById('f-pedido').value.trim(),
     presupuesto: document.getElementById('f-presu').value,
+    importe: parseFloat(document.getElementById('f-importe').value)||0,
     pago: document.getElementById('f-pago').value,
     notasPago: document.getElementById('f-notas').value.trim(),
     personal: parseInt(document.getElementById('f-personal').value)||0,
