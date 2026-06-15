@@ -529,11 +529,11 @@ function cardHTML(ev, isClosed){
   var actionsHTML = isClosed
     ? '<button class="btn-reopen" onclick="reopenEv('+idx+')">↩️ Reabrir</button><button class="btn-del" onclick="delEv('+idx+')">🗑 Eliminar</button>'
     : '<button class="btn-edit" onclick="editEv('+idx+')">✏️ Editar</button>'+
-      '<div class="close-wrap"><button class="btn-close" onclick="toggleCloseMenu(this)">🔒 Cerrar ▾</button>'+
+      '<div class="close-wrap"><button class="btn-close" onclick="toggleCloseMenu(this,event)">🔒 Cerrar ▾</button>'+
       '<div class="close-menu">'+
-      '<div class="close-item" onclick="closeEv('+idx+',\"finalizado\")"><div class="ci ci-ok">✅</div><div>Finalizado<br><small>Evento realizado con éxito</small></div></div>'+
-      '<div class="close-item" onclick="closeEv('+idx+',\"no-presupuesto\")"><div class="ci ci-no">❌</div><div>Cerrado<br><small>No acepta el presupuesto</small></div></div>'+
-      '<div class="close-item" onclick="closeEv('+idx+',\"sin-contestacion\")"><div class="ci ci-nc">🔇</div><div>Cerrado<br><small>Sin contestación</small></div></div>'+
+      '<div class="close-item" onclick="closeEv('+idx+',\"finalizado\",event)"><div class="ci ci-ok">✅</div><div>Finalizado<br><small>Evento realizado con éxito</small></div></div>'+
+      '<div class="close-item" onclick="closeEv('+idx+',\"no-presupuesto\",event)"><div class="ci ci-no">❌</div><div>Cerrado<br><small>No acepta el presupuesto</small></div></div>'+
+      '<div class="close-item" onclick="closeEv('+idx+',\"sin-contestacion\",event)"><div class="ci ci-nc">🔇</div><div>Cerrado<br><small>Sin contestación</small></div></div>'+
       '</div></div>'+
       '<button class="btn-del" onclick="delEv('+idx+')">🗑 Eliminar</button>';
   return '<div class="ev-card'+(isClosed?' closed':'')+'" id="card-'+idx+'">'+
@@ -566,14 +566,16 @@ function toggleCard(idx){
   if(!open){b.classList.add('show');c.classList.add('open');}
 }
 
-function toggleCloseMenu(btn){
+function toggleCloseMenu(btn,e){
+  if(e) e.stopPropagation();
   var menu=btn.nextElementSibling;
   var isOpen=menu.classList.contains('open');
-  // Close all open menus
   document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
-  if(!isOpen){
-    menu.classList.add('open');
-  }
+  if(!isOpen) menu.classList.add('open');
+}
+
+function stopMenuClose(e){
+  if(e) e.stopPropagation();
 }
 
 function closeEv(idx,estado){
