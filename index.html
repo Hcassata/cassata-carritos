@@ -132,9 +132,9 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .close-wrap{position:relative}
 .btn-close{padding:8px 12px;font-size:12px;font-weight:800;border:1.5px solid var(--gray2);border-radius:var(--r);background:none;cursor:pointer;color:var(--txt2);font-family:'Nunito',sans-serif}
 .btn-close:hover{border-color:var(--redtxt);color:var(--redtxt);background:var(--redbg)}
-.close-menu{display:none;position:absolute;bottom:calc(100% + 6px);right:0;background:var(--white);border:1.5px solid var(--gray2);border-radius:var(--r2);box-shadow:var(--sh2);min-width:220px;z-index:50;overflow:hidden}
+.close-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--white);border:1.5px solid var(--gray2);border-radius:var(--r2);box-shadow:var(--sh2);min-width:220px;z-index:200;overflow:hidden}
 .close-menu.open{display:block}
-.close-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--txt);border-bottom:1px solid var(--gray);transition:background .12s}
+.close-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--txt);border-bottom:1px solid var(--gray);transition:background .12s;pointer-events:all;user-select:none}
 .close-item:last-child{border-bottom:none}
 .close-item:hover{background:var(--ice)}
 .close-item small{color:var(--txt2);font-weight:600;font-size:11px}
@@ -568,20 +568,21 @@ function toggleCard(idx){
 
 function toggleCloseMenu(btn){
   var menu=btn.nextElementSibling;
-  document.querySelectorAll('.close-menu.open').forEach(function(m){if(m!==menu)m.classList.remove('open');});
-  menu.classList.toggle('open');
-  if(menu.classList.contains('open')){
-    setTimeout(function(){
-      function outsideHandler(e){
-        if(!btn.contains(e.target)&&!menu.contains(e.target)){
-          menu.classList.remove('open');
-          document.removeEventListener('mousedown',outsideHandler);
-        }
-      }
-      document.addEventListener('mousedown',outsideHandler);
-    },150);
+  var wasOpen=menu.classList.contains('open');
+  // Close all menus
+  document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
+  if(!wasOpen){
+    menu.classList.add('open');
+    menu.style.pointerEvents='all';
   }
 }
+
+// Close menus when clicking outside - at document level
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.close-wrap')){
+    document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
+  }
+});
 
 function closeEv(idx,estado){
   events[idx].estado=estado;
