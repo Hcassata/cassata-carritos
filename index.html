@@ -238,7 +238,10 @@ var STORE = 'cassata_v8';
 var SHEET_URL_KEY = 'cassata_sheet_url';
 var events = [], calY = new Date().getFullYear(), calM = new Date().getMonth();
 var filters = {carrito:'all', pago:'all', presupuesto:'all'}, editIdx = -1;
-var sheetUrl = localStorage.getItem(SHEET_URL_KEY) || 'https://script.google.com/macros/s/AKfycbxOFYoFEvV4EtYiEnA6xvYt7_70JL8HiLrWTqWNWyhr6kEHSv2jQdVCESB2MVYmnkZ7/exec';
+var _defaultUrl = 'https://script.google.com/macros/s/AKfycbxOFYoFEvV4EtYiEnA6xvYt7_70JL8HiLrWTqWNWyhr6kEHSv2jQdVCESB2MVYmnkZ7/exec';
+var sheetUrl = localStorage.getItem(SHEET_URL_KEY) || _defaultUrl;
+// SIEMPRE guardar la URL correcta en localStorage al cargar la página
+if (sheetUrl) localStorage.setItem(SHEET_URL_KEY, sheetUrl);
 var currentPDFData = null, currentPDFName = '';
 var isSyncing = false;
 
