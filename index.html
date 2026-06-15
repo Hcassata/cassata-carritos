@@ -349,30 +349,24 @@ function testConnection(url) {
 
 // ===== DATA =====
 function loadData() {
-  // STEP 1: Load from localStorage immediately so something shows
-  try {
-    var cached = localStorage.getItem(STORE);
-    if (cached) {
-      var parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        events = parsed;
-        render();
-      }
-    }
-  } catch(e) {}
-
-  // STEP 2: Try to sync from Sheets in background
+  // Asegurarse de que sheetUrl está cargada
+  if (!sheetUrl) {
+    sheetUrl = localStorage.getItem(SHEET_URL_KEY) || '';
+  }
+  // Si hay URL, guardarla y sincronizar con Sheets
   if (sheetUrl) {
-    setSyncStatus('syncing', 'Sincronizando con Sheets...');
+    localStorage.setItem(SHEET_URL_KEY, sheetUrl);
+    setSyncStatus('syncing', 'Cargando desde Sheets...');
     syncFromSheet();
   } else {
-    // No URL - show demo data if nothing in localStorage
-    if (events.length === 0) {
-      events = JSON.parse(JSON.stringify(DEMO));
-      saveLocal();
-      render();
-    }
-    setSyncStatus('error', '⚠️ Conecta Google Sheets para sincronizar');
+    // Sin URL - usar localStorage o demo
+    try {
+      var r = localStorage.getItem(STORE);
+      if (r) { events = JSON.parse(r); }
+      else { events = JSON.parse(JSON.stringify(DEMO)); saveLocal(); }
+    } catch(e) { events = JSON.parse(JSON.stringify(DEMO)); }
+    setSyncStatus('error', '⚠️ Sin conexión a Sheets');
+    render();
   }
 }
 
