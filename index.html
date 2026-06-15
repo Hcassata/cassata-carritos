@@ -234,7 +234,7 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
         <div class="fg full"><label>💬 Observaciones</label><textarea id="f-obs" placeholder="Notas internas, peticiones especiales, recordatorios, detalles del cliente..."></textarea></div><div class="fg"><label>Personas personal</label><input type="number" id="f-personal" min="0" value="2"></div><div class="fg"><label>Horas de trabajo</label><input type="number" id="f-horas" min="0" value="4"></div></div></div><div class="form-actions"><button class="btn-cancel" id="btnCancelar">Cancelar</button><button class="btn-save" id="btnGuardar">&#128190; Guardar evento</button></div></div></div>
 
 <script>
-var STORE = 'cassata_v7';
+var STORE = 'cassata_v8';
 var SHEET_URL_KEY = 'cassata_sheet_url';
 var events = [], calY = new Date().getFullYear(), calM = new Date().getMonth();
 var filters = {carrito:'all', pago:'all', presupuesto:'all'}, editIdx = -1;
@@ -286,23 +286,35 @@ function syncFromSheet() {
   callSheet({action: 'getAll'})
     .then(function(res) {
       isSyncing = false;
-      if (res.ok) {
-        events = res.events.map(function(ev) {
+      if (res && res.ok) {
+        events = (res.events || []).map(function(ev) {
           ev.fecha   = normalizeFecha(ev.fecha);
           ev.hinicio = normalizeHora(ev.hinicio);
           ev.hfin    = normalizeHora(ev.hfin);
+          if (!ev.estado)   ev.estado = '';
+          if (!ev.obs)      ev.obs = '';
+          if (!ev.notasPago) ev.notasPago = '';
+          if (!ev.pdfName)  ev.pdfName = '';
           return ev;
         });
         saveLocal();
         render();
-        setSyncStatus('ok', 'Sincronizado · ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'}));
+        setSyncStatus('ok', 'Sincronizado · ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'}) + ' (' + events.length + ' eventos)');
       } else {
-        setSyncStatus('error', 'Error: ' + res.error);
+        setSyncStatus('error', 'Sheets devolvió error: ' + (res ? res.error : 'respuesta vacía'));
       }
     })
     .catch(function(e) {
       isSyncing = false;
-      setSyncStatus('error', 'Sin conexión con Sheets');
+      setSyncStatus('error', 'Error de conexión: ' + e.message);
+      // Fall back to localStorage
+      try {
+        var r = localStorage.getItem(STORE);
+        if (r && events.length === 0) {
+          events = JSON.parse(r);
+          render();
+        }
+      } catch(ex) {}
     });
 }
 
@@ -338,15 +350,23 @@ function testConnection(url) {
 
 // ===== DATA =====
 function loadData() {
-  try {
-    var r = localStorage.getItem(STORE);
-    if (r) events = JSON.parse(r);
-    else { events = JSON.parse(JSON.stringify(DEMO)); saveLocal(); }
-  } catch(e) { events = JSON.parse(JSON.stringify(DEMO)); }
-  
-  setSyncStatus('syncing', 'Cargando desde Sheets...');
-  syncFromSheet();
-  render();
+  if (sheetUrl) {
+    // Try showing cached events while Sheets loads
+    try {
+      var cached = localStorage.getItem(STORE);
+      if (cached) { events = JSON.parse(cached); render(); }
+    } catch(e) {}
+    setSyncStatus('syncing', 'Cargando desde Sheets...');
+    syncFromSheet();
+  } else {
+    try {
+      var r = localStorage.getItem(STORE);
+      if (r) events = JSON.parse(r);
+      else { events = JSON.parse(JSON.stringify(DEMO)); saveLocal(); }
+    } catch(e) { events = JSON.parse(JSON.stringify(DEMO)); }
+    setSyncStatus('error', 'Sin conexión a Google Sheets');
+    render();
+  }
 }
 
 function saveLocal() {
