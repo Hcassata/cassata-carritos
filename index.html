@@ -501,11 +501,13 @@ function renderStats(){
   var c1=events.filter(function(e){return e.carrito==='CARRITO 1';}).length;
   var pct=t?Math.round(pag/t*100):0;
   // Count urgent events (open, <=7 days, has issues)
+  var today0 = new Date(); today0.setHours(0,0,0,0);
   var urgent = events.filter(function(e){
     if (e.estado) return false;
-    var d = new Date(e.fecha+'T12:00:00'), today = new Date(); today.setHours(0,0,0,0);
-    var days = Math.ceil((d-today)/86400000);
-    return days>=0 && days<=7 && (e.presupuesto==='pendiente'||e.pago==='pendiente'||e.pago==='señal');
+    var d = new Date(e.fecha+'T12:00:00');
+    var days = Math.ceil((d-today0)/86400000);
+    // Past events always urgent, future ≤7 days with issues also urgent
+    return days < 0 || (days <= 7 && (e.presupuesto==='pendiente'||e.pago==='pendiente'||e.pago==='señal'));
   }).length;
 
   document.getElementById('statsRow').innerHTML=
@@ -539,23 +541,30 @@ function cardHTML(ev, isClosed){
   var idx = events.indexOf(ev);
   var headBg = isClosed ? 'background:linear-gradient(135deg,#5a6570,#7a8590)' : '';
 
-  // Alert: event within 7 days AND has issues
+  // Alert: events with issues or already past
   var alertBadge = '';
   if (!isClosed && ev.fecha) {
     var evDate = new Date(ev.fecha + 'T12:00:00');
     var today = new Date();
     today.setHours(0,0,0,0);
     var daysLeft = Math.ceil((evDate - today) / 86400000);
-    var hasIssue = (ev.presupuesto === 'pendiente' || ev.pago === 'pendiente' || ev.pago === 'señal');
-    if (daysLeft >= 0 && daysLeft <= 7 && hasIssue) {
-      var urgency = daysLeft === 0 ? '🔴 HOY' : daysLeft === 1 ? '🔴 MAÑANA' : '🟠 ' + daysLeft + ' días';
-      alertBadge = '<span class="alert-badge">' + urgency + '</span>';
-      if (!headBg) headBg = daysLeft <= 1
-        ? 'background:linear-gradient(135deg,#7a1a08,#b02010)'
-        : 'background:linear-gradient(135deg,#5a3200,#8a5000)';
-    } else if (daysLeft >= 0 && daysLeft <= 3 && !hasIssue) {
-      // Close event but all good
-      alertBadge = '<span class="alert-badge-ok">✅ ' + (daysLeft===0?'HOY':daysLeft===1?'MAÑANA':daysLeft+' días') + '</span>';
+    var hasIssue = ev.presupuesto === 'pendiente' || ev.pago === 'pendiente' || ev.pago === 'señal';
+
+    if (daysLeft < 0) {
+      // Already past — always show, change header to grey-red
+      alertBadge = '<span class="alert-badge" style="background:#888">⚠️ Hace ' + Math.abs(daysLeft) + ' día' + (Math.abs(daysLeft)>1?'s':'') + '</span>';
+      if (!headBg) headBg = 'background:linear-gradient(135deg,#4a4a5a,#6a6a7a)';
+    } else if (daysLeft === 0) {
+      alertBadge = '<span class="alert-badge">🔴 HOY</span>';
+      if (!headBg) headBg = 'background:linear-gradient(135deg,#7a1a08,#b02010)';
+    } else if (daysLeft === 1) {
+      alertBadge = '<span class="alert-badge">🔴 MAÑANA</span>';
+      if (!headBg) headBg = 'background:linear-gradient(135deg,#7a1a08,#b02010)';
+    } else if (daysLeft <= 7 && hasIssue) {
+      alertBadge = '<span class="alert-badge">🟠 ' + daysLeft + ' días</span>';
+      if (!headBg) headBg = 'background:linear-gradient(135deg,#5a3200,#8a5000)';
+    } else if (daysLeft <= 7 && !hasIssue) {
+      alertBadge = '<span class="alert-badge-ok">✅ ' + daysLeft + ' día' + (daysLeft>1?'s':'') + '</span>';
     }
   }
   var closedTag = isClosed ? '<span class="closed-tag">'+(ev.estado==='finalizado'?'✅ Finalizado':ev.estado==='no-presupuesto'?'❌ No acepta':' 🔇 Sin contestación')+'</span>' : '';
