@@ -61,7 +61,7 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .sec-title::before{content:'';display:inline-block;width:5px;height:22px;background:var(--gold);border-radius:3px}
 
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;grid-template-rows:auto}
 .stat{background:var(--white);border-radius:var(--r2);padding:16px 14px;box-shadow:var(--sh);border-top:4px solid var(--az)}
 .stat-icon{font-size:20px;margin-bottom:6px}
 .stat-lbl{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;font-weight:900;margin-bottom:5px}
@@ -512,7 +512,8 @@ function renderStats(){
     '<div class="stat" style="border-top-color:var(--az)"><div class="stat-icon">🍦</div><div class="stat-lbl">Total eventos</div><div class="stat-num">'+t+'</div><div class="stat-sub">C1:'+c1+' · C2:'+(t-c1)+'</div></div>'+
     '<div class="stat" style="border-top-color:var(--ok)"><div class="stat-icon">✅</div><div class="stat-lbl">Pagados</div><div class="stat-num" style="color:var(--ok)">'+pag+'</div><div class="prog"><div class="prog-fill" style="width:'+pct+'%"></div></div><div class="stat-sub">'+pct+'% completado</div></div>'+
     '<div class="stat" style="border-top-color:'+(pend>0?'var(--redtxt)':'var(--gray2)')+'"><div class="stat-icon">⏳</div><div class="stat-lbl">Pago pendiente</div><div class="stat-num" style="color:'+(pend>0?'var(--redtxt)':'var(--txt)')+'">'+pend+'</div><div class="stat-sub">'+senal+' con señal</div></div>'+
-    '<div class="stat" style="border-top-color:'+(pp>0?'var(--gold2)':'var(--gray2)')+'"><div class="stat-icon">📋</div><div class="stat-lbl">Presup. por enviar</div><div class="stat-num" style="color:'+(pp>0?'var(--redtxt)':'var(--txt)')+'">'+pp+'</div><div class="stat-sub">requieren atención</div></div>';
+    '<div class="stat" style="border-top-color:'+(pp>0?'var(--gold2)':'var(--gray2)')+'"><div class="stat-icon">📋</div><div class="stat-lbl">Presup. por enviar</div><div class="stat-num" style="color:'+(pp>0?'var(--redtxt)':'var(--txt)')+'">'+pp+'</div><div class="stat-sub">requieren atención</div></div>'+
+    (urgent>0 ? '<div class="stat" style="border-top-color:#ff4422;grid-column:1/-1"><div class="stat-icon">🚨</div><div class="stat-lbl">Urgente — próximos 7 días</div><div class="stat-num" style="color:#ff4422">'+urgent+'</div><div class="stat-sub">evento'+(urgent>1?'s con':'con')+' presupuesto o pago pendiente</div></div>' : '');
 }
 
 function getFiltered(){
