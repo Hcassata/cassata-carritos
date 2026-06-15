@@ -631,9 +631,8 @@ function cardHTML(ev, isClosed){
       '<div class="di"><div class="dl">👥 Personal</div><div class="dv">'+personalTxt+'</div></div>'+
       '<div class="di"><div class="dl">📋 Presupuesto</div><div class="dv"><span class="badge '+presC(ev.presupuesto)+'">'+presL(ev.presupuesto)+'</span>'+(ev.pdfName?'<br><a class="pdf-link" href="'+(ev.pdfData||'#')+'" download="'+ev.pdfName+'" onclick="event.stopPropagation()">📄 '+ev.pdfName+'</a>':'')+'</div></div>'+
       '<div class="di"><div class="dl">💳 Pago</div><div class="dv"><span class="badge '+pagoC(ev.pago)+'">'+pagoL(ev.pago)+'</span>'+(ev.notasPago?'<div class="notas-box">'+ev.notasPago+'</div>':'')+'</div></div>'+
-      (ev.importe?'<div class="di"><div class="dl">💶 Importe</div><div class="dv"><strong style="font-size:16px;color:var(--az)">'+ev.importe.toLocaleString(\'es-ES\',{minimumFractionDigits:2})+' €</strong></div></div>':'')+
-      (ev.obs?'<div class="di di-full"><div class="dl">💬 Observaciones</div><div class="dv obs-box">'+ev.obs+'</div></div>':'')+
-      '<div class="ev-actions">'+actionsHTML+'</div>'+
+      (ev.importe ? '<div class="di"><div class="dl">💶 Importe</div><div class="dv"><strong style="font-size:16px;color:var(--az)">'+parseFloat(ev.importe).toLocaleString("es-ES",{minimumFractionDigits:2})+' €</strong></div></div>' : '')+
+            '<div class="ev-actions">'+actionsHTML+'</div>'+
     '</div>'+
   '</div>';
 }
@@ -656,6 +655,90 @@ function toggleCloseMenu(btn,e){
 
 function stopMenuClose(e){
   if(e) e.stopPropagation();
+}
+
+function printEv(idx) {
+  var ev = events[idx];
+  var personalTxt = (!ev.personal||ev.personal==0) ? 'Sin personal de servicio' : ev.personal+' personas x '+ev.horas+'h = '+(ev.personal*ev.horas)+'h';
+  var importeTxt = ev.importe ? parseFloat(ev.importe).toLocaleString('es-ES',{minimumFractionDigits:2})+' EUR' : 'No especificado';
+  var fechaTxt = ev.fecha ? new Date(ev.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '—';
+  var pagoBadge = ev.pago==='pagado' ? 'color:#0a5a30;background:#d4f5e8' : ev.pago==='senal' ? 'color:#7a4a00;background:#fff3d0' : 'color:#7a1a08;background:#fde8e4';
+  var pagoTxt = ev.pago==='pagado' ? 'PAGADO' : ev.pago==='senal' ? 'Senal pagada' : 'PENDIENTE';
+  var presuTxt = ev.presupuesto==='aprobado' ? 'Aprobado' : ev.presupuesto==='enviado' ? 'Enviado - por aprobar' : 'Por enviar';
+  var logoSrc = document.querySelector('.brand-ico img') ? document.querySelector('.brand-ico img').src : '';
+
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ficha - '+ev.nombre+'</title>'+
+  '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">'+
+  '<style>'+
+  '*{box-sizing:border-box;margin:0;padding:0}'+
+  'body{font-family:Nunito,sans-serif;background:#f0f5fb;padding:24px;color:#1a2840}'+
+  '.page{max-width:720px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(13,37,72,.15)}'+
+  '.hdr{background:linear-gradient(135deg,#0d2548,#2a5ca8);padding:22px 28px;display:flex;align-items:center;gap:14px}'+
+  '.logo{width:50px;height:50px;border-radius:50%;border:2px solid #f0c040;overflow:hidden}'+
+  '.logo img{width:100%;height:100%;object-fit:cover}'+
+  '.hdr h1{font-family:Playfair Display,serif;font-size:20px;color:white;font-weight:900}'+
+  '.hdr p{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-top:2px}'+
+  '.ev-title{background:#f0c040;padding:14px 28px;font-family:Playfair Display,serif;font-size:20px;font-weight:900;color:#0d2548}'+
+  '.ev-sub{background:#e8a800;padding:5px 28px;font-size:11px;font-weight:800;color:#0d2548;text-transform:uppercase;letter-spacing:.08em}'+
+  '.body{padding:24px 28px}'+
+  '.sec{margin-bottom:20px}'+
+  '.sec-t{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:#8090a8;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e4edf8}'+
+  '.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}'+
+  '.f{background:#f0f5fb;border-radius:10px;padding:10px 14px}'+
+  '.f.full{grid-column:1/-1}'+
+  '.f label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#4a5e7a;display:block;margin-bottom:3px}'+
+  '.f span{font-size:13px;font-weight:700;line-height:1.5}'+
+  '.money{background:#0d2548;border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:12px}'+
+  '.money span{color:rgba(255,255,255,.65);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}'+
+  '.money strong{color:#f0c040;font-size:28px;font-family:Playfair Display,serif;font-weight:900}'+
+  '.obs{background:#fff3d0;border:1px solid #e8a800;border-radius:8px;padding:10px 14px;font-size:12px;color:#5a3200;line-height:1.6;white-space:pre-wrap}'+
+  '.firma{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px;padding-top:16px;border-top:1px dashed #dde3ee}'+
+  '.firma-c{text-align:center}'+
+  '.firma-l{border-bottom:1.5px solid #1a2840;height:44px;margin-bottom:6px}'+
+  '.firma-n{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#8090a8}'+
+  '.ftr{background:#f0f5fb;border-top:1px solid #dde3ee;padding:12px 28px;display:flex;justify-content:space-between;font-size:11px;color:#8090a8;font-weight:600}'+
+  '.btn-p{display:block;margin:20px auto;padding:11px 28px;background:#0d2548;color:white;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif}'+
+  '@media print{body{padding:0;background:white}.page{box-shadow:none;border-radius:0}.btn-p{display:none}}'+
+  '</style></head><body>'+
+  '<div class="page">'+
+  '<div class="hdr"><div class="logo"><img src="'+logoSrc+'" alt="Cassata"></div>'+
+  '<div><h1>IL CARRETTO CASSATA</h1><p>Ficha de evento · Gestion interna</p></div></div>'+
+  '<div class="ev-title">'+ev.nombre+'</div>'+
+  '<div class="ev-sub">'+ev.carrito+' &nbsp;·&nbsp; '+fechaTxt+'</div>'+
+  '<div class="body">'+
+  '<div class="sec"><div class="sec-t">Horario y lugar</div><div class="g">'+
+  '<div class="f"><label>Hora inicio</label><span>'+(ev.hinicio||'—')+'</span></div>'+
+  '<div class="f"><label>Hora fin</label><span>'+(ev.hfin||'—')+'</span></div>'+
+  '<div class="f full"><label>Direccion</label><span>'+(ev.lugar||'—')+'</span></div>'+
+  '</div></div>'+
+  '<div class="sec"><div class="sec-t">Contacto</div><div class="g">'+
+  '<div class="f"><label>Nombre</label><span>'+(ev.contacto||'—')+'</span></div>'+
+  '<div class="f"><label>Telefono</label><span>'+(ev.telefono||'—')+'</span></div>'+
+  '</div></div>'+
+  '<div class="sec"><div class="sec-t">Pedido y personal</div><div class="g">'+
+  '<div class="f full"><label>Han pedido</label><span>'+(ev.pedido||'—')+'</span></div>'+
+  '<div class="f"><label>Personal</label><span>'+personalTxt+'</span></div>'+
+  '<div class="f"><label>Presupuesto</label><span>'+presuTxt+'</span></div>'+
+  '</div></div>'+
+  '<div class="sec"><div class="sec-t">Pago</div><div class="g">'+
+  '<div class="f"><label>Estado</label><span style="padding:3px 10px;border-radius:10px;font-size:12px;font-weight:800;'+pagoBadge+'">'+pagoTxt+'</span></div>'+
+  (ev.notasPago?'<div class="f"><label>Notas del pago</label><span>'+ev.notasPago+'</span></div>':'')+
+  '</div>'+
+  (ev.importe?'<div class="money"><span>Importe total del evento</span><strong>'+importeTxt+'</strong></div>':'')+
+  '</div>'+
+  (ev.obs?'<div class="sec"><div class="sec-t">Observaciones</div><div class="obs">'+ev.obs+'</div></div>':'')+
+  '<div class="firma">'+
+  '<div class="firma-c"><div class="firma-l"></div><div class="firma-n">Firma del cliente</div></div>'+
+  '<div class="firma-c"><div class="firma-l"></div><div class="firma-n">Firma CASSATA</div></div>'+
+  '</div></div>'+
+  '<div class="ftr"><span>CASSATA helados naturales · cassatahelados.com · 692 614 689</span>'+
+  '<span>'+new Date().toLocaleDateString('es-ES')+'</span></div></div>'+
+  '<button class="btn-p" onclick="window.print()">Imprimir / Guardar como PDF</button>'+
+  '</body></html>';
+
+  var w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
 }
 
 function closeEv(idx,estado){
