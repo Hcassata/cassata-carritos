@@ -570,11 +570,17 @@ function toggleCloseMenu(btn){
   var menu=btn.nextElementSibling;
   document.querySelectorAll('.close-menu.open').forEach(function(m){if(m!==menu)m.classList.remove('open');});
   menu.classList.toggle('open');
-  setTimeout(function(){
-    document.addEventListener('click',function h(e){
-      if(!btn.contains(e.target)&&!menu.contains(e.target)){menu.classList.remove('open');document.removeEventListener('click',h);}
-    });
-  },10);
+  if(menu.classList.contains('open')){
+    setTimeout(function(){
+      function outsideHandler(e){
+        if(!btn.contains(e.target)&&!menu.contains(e.target)){
+          menu.classList.remove('open');
+          document.removeEventListener('mousedown',outsideHandler);
+        }
+      }
+      document.addEventListener('mousedown',outsideHandler);
+    },150);
+  }
 }
 
 function closeEv(idx,estado){
