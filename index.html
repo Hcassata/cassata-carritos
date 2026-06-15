@@ -568,21 +568,13 @@ function toggleCard(idx){
 
 function toggleCloseMenu(btn){
   var menu=btn.nextElementSibling;
-  var wasOpen=menu.classList.contains('open');
-  // Close all menus
+  var isOpen=menu.classList.contains('open');
+  // Close all open menus
   document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
-  if(!wasOpen){
+  if(!isOpen){
     menu.classList.add('open');
-    menu.style.pointerEvents='all';
   }
 }
-
-// Close menus when clicking outside - at document level
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.close-wrap')){
-    document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
-  }
-});
 
 function closeEv(idx,estado){
   events[idx].estado=estado;
@@ -754,6 +746,13 @@ document.addEventListener('DOMContentLoaded', function(){
       document.getElementById(views[id]).classList.add('active');
       if(id==='tabCal')renderCal();
     });
+  });
+
+  // Close menus on outside click (must be in DOMContentLoaded so it fires AFTER the toggle)
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.close-wrap')){
+      document.querySelectorAll('.close-menu.open').forEach(function(m){m.classList.remove('open');});
+    }
   });
 
   // Pills
