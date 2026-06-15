@@ -134,6 +134,9 @@ body{font-family:'Nunito',sans-serif;background:var(--ice);color:var(--txt);min-
 .btn-close:hover{border-color:var(--redtxt);color:var(--redtxt);background:var(--redbg)}
 .btn-close-hdr{padding:4px 8px;font-size:11px;font-weight:800;border:1.5px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(255,255,255,.15);cursor:pointer;color:white;font-family:'Nunito',sans-serif;white-space:nowrap}
 .btn-close-hdr:hover{background:rgba(255,255,255,.3)}
+.alert-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900;background:#ff4422;color:white;margin-left:8px;animation:alertpulse 1.5s infinite;letter-spacing:.04em;vertical-align:middle}
+.alert-badge-ok{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900;background:var(--ok);color:white;margin-left:8px;vertical-align:middle}
+@keyframes alertpulse{0%,100%{opacity:1}50%{opacity:.6}}
 .close-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--white);border:1.5px solid var(--gray2);border-radius:var(--r2);box-shadow:var(--sh2);min-width:220px;z-index:200}
 .close-menu.open{display:block}
 .close-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--txt);border-bottom:1px solid var(--gray);transition:background .12s;pointer-events:all;user-select:none}
@@ -497,6 +500,14 @@ function renderStats(){
   var pp=events.filter(function(e){return e.presupuesto==='pendiente'&&!e.estado;}).length;
   var c1=events.filter(function(e){return e.carrito==='CARRITO 1';}).length;
   var pct=t?Math.round(pag/t*100):0;
+  // Count urgent events (open, <=7 days, has issues)
+  var urgent = events.filter(function(e){
+    if (e.estado) return false;
+    var d = new Date(e.fecha+'T12:00:00'), today = new Date(); today.setHours(0,0,0,0);
+    var days = Math.ceil((d-today)/86400000);
+    return days>=0 && days<=7 && (e.presupuesto==='pendiente'||e.pago==='pendiente'||e.pago==='señal');
+  }).length;
+
   document.getElementById('statsRow').innerHTML=
     '<div class="stat" style="border-top-color:var(--az)"><div class="stat-icon">🍦</div><div class="stat-lbl">Total eventos</div><div class="stat-num">'+t+'</div><div class="stat-sub">C1:'+c1+' · C2:'+(t-c1)+'</div></div>'+
     '<div class="stat" style="border-top-color:var(--ok)"><div class="stat-icon">✅</div><div class="stat-lbl">Pagados</div><div class="stat-num" style="color:var(--ok)">'+pag+'</div><div class="prog"><div class="prog-fill" style="width:'+pct+'%"></div></div><div class="stat-sub">'+pct+'% completado</div></div>'+
@@ -515,8 +526,8 @@ function getFiltered(){
 }
 
 function renderLists(){
-  var open = getFiltered();
-  var closed = events.filter(function(e){return !!e.estado;}).sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var open = getFiltered().sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var closed = events.filter(function(e){return !!e.estado;}).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
   document.getElementById('cntA').textContent = events.filter(function(e){return !e.estado;}).length;
   document.getElementById('cntC').textContent = closed.length;
   document.getElementById('listAbiertos').innerHTML = open.length ? open.map(function(ev){ return cardHTML(ev, false); }).join('') : '<div class="empty">🍦 Sin eventos con estos filtros</div>';
@@ -526,6 +537,26 @@ function renderLists(){
 function cardHTML(ev, isClosed){
   var idx = events.indexOf(ev);
   var headBg = isClosed ? 'background:linear-gradient(135deg,#5a6570,#7a8590)' : '';
+
+  // Alert: event within 7 days AND has issues
+  var alertBadge = '';
+  if (!isClosed && ev.fecha) {
+    var evDate = new Date(ev.fecha + 'T12:00:00');
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var daysLeft = Math.ceil((evDate - today) / 86400000);
+    var hasIssue = (ev.presupuesto === 'pendiente' || ev.pago === 'pendiente' || ev.pago === 'señal');
+    if (daysLeft >= 0 && daysLeft <= 7 && hasIssue) {
+      var urgency = daysLeft === 0 ? '🔴 HOY' : daysLeft === 1 ? '🔴 MAÑANA' : '🟠 ' + daysLeft + ' días';
+      alertBadge = '<span class="alert-badge">' + urgency + '</span>';
+      if (!headBg) headBg = daysLeft <= 1
+        ? 'background:linear-gradient(135deg,#7a1a08,#b02010)'
+        : 'background:linear-gradient(135deg,#5a3200,#8a5000)';
+    } else if (daysLeft >= 0 && daysLeft <= 3 && !hasIssue) {
+      // Close event but all good
+      alertBadge = '<span class="alert-badge-ok">✅ ' + (daysLeft===0?'HOY':daysLeft===1?'MAÑANA':daysLeft+' días') + '</span>';
+    }
+  }
   var closedTag = isClosed ? '<span class="closed-tag">'+(ev.estado==='finalizado'?'✅ Finalizado':ev.estado==='no-presupuesto'?'❌ No acepta':' 🔇 Sin contestación')+'</span>' : '';
   var personalTxt = (ev.personal===0||ev.personal==='0'||!ev.personal) ? '<em style="color:var(--gray3)">Sin personal</em>' : ev.personal+' pers. × '+ev.horas+'h = <strong>'+(ev.personal*ev.horas)+'h</strong>';
   var actionsHTML = isClosed
@@ -535,7 +566,7 @@ function cardHTML(ev, isClosed){
     return '<div class="ev-card'+(isClosed?' closed':'')+'" id="card-'+idx+'">'+
     '<div class="ev-head" onclick="toggleCard('+idx+')" style="'+headBg+'">'+
       '<div class="ev-left"><div class="cpip '+pipC(ev.carrito)+'">'+pipL(ev.carrito)+'</div>'+
-      '<div><div class="ev-name">'+ev.nombre+closedTag+'</div><div class="ev-meta">'+fd(ev.fecha)+' · '+ev.hinicio+'–'+ev.hfin+' · '+ev.personal+' pers.</div></div></div>'+
+      '<div><div class="ev-name">'+ev.nombre+closedTag+alertBadge+'</div><div class="ev-meta">'+fd(ev.fecha)+' · '+ev.hinicio+'–'+ev.hfin+' · '+ev.personal+' pers.</div></div></div>'+
       '<div class="ev-badges">'+
       (isClosed ? '' : '<div class="close-wrap" onclick="event.stopPropagation()"><button class="btn-close-hdr" onclick="toggleCloseMenu(this,event)">🔒▾</button><div class="close-menu">'+
         '<div class="close-item" onclick="closeEv('+idx+',\'finalizado\',event)"><div class="ci ci-ok">✅</div><div>Finalizado<br><small>Evento realizado con éxito</small></div></div>'+
